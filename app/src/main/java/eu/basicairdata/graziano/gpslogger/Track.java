@@ -18,8 +18,12 @@
 
 package eu.basicairdata.graziano.gpslogger;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Location;
+import android.util.Log;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 
 public class Track {
@@ -100,6 +104,9 @@ public class Track {
 
     // The value of the progressbar in card view
     private int Progress = 0;
+
+    // The Thumbnail Bitmap
+    private Bitmap Thumbnail = null;
 
     // The altitude validator (the anti spikes filter):
     // - Max Acceleration = 12 m/s^2
@@ -344,6 +351,8 @@ public class Track {
                 if (End_Latitude != NOT_AVAILABLE) End_EGMAltitudeCorrection = egm96.getEGMCorrection(End_Latitude, End_Longitude);
             }
         }
+
+        loadThumbnail();
     }
 
 
@@ -548,7 +557,26 @@ public class Track {
         Progress = progress;
     }
 
+    public Bitmap getThumbnail() {
+        if (Thumbnail == null) loadThumbnail();
+        return Thumbnail;
+    };
+
+    public void setThumbnail(Bitmap thumbnail) {
+        Thumbnail = thumbnail;
+    }
+
     // --------------------------------------------------------------------------------------------
+
+    public void loadThumbnail() {
+        // Load Thumbnail if exists;
+        String Filename = GPSApplication.getInstance().getApplicationContext().getFilesDir() + "/Thumbnails/" + id + ".png";
+        File file = new File(Filename);
+        if (file.exists()) {
+            Thumbnail = BitmapFactory.decodeFile(Filename);
+            Log.w("myApp", "[#] Track.java - Loaded Thumbnail for Track " + id);
+        }
+    }
 
     public boolean isValidAltitude() {
         return AltitudeFilter.isValid();

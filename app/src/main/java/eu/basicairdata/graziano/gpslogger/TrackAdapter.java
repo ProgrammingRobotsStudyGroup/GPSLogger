@@ -33,7 +33,6 @@ import android.widget.TextView;
 
 import org.greenrobot.eventbus.EventBus;
 
-import java.io.File;
 import java.util.ArrayList;
 
 
@@ -153,12 +152,9 @@ class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.TrackHolder> {
                 imageViewIcon.setImageBitmap(bmpTrackType[TT]);
             }
             else imageViewIcon.setVisibility(View.INVISIBLE);
-            String Filename = FilesDir + "/Thumbnails/" + track.getId() + ".png";
-            File file = new File(Filename);
-            if (file.exists ()) {
-                bmp = BitmapFactory.decodeFile(Filename);
-                imageViewThumbnail.setImageBitmap(bmp);
-            } else imageViewThumbnail.setImageDrawable(null);
+
+            //if (track.getThumbnail() == null) track.loadThumbnail();
+            imageViewThumbnail.setImageBitmap(track.getThumbnail());
             //Picasso.with(GPSApplication.getInstance().getApplicationContext()).load(file).into(imageViewThumbnail);
         }
     }
