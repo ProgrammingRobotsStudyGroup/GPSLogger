@@ -19,6 +19,10 @@
 package eu.basicairdata.graziano.gpslogger;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Log;
+
+import java.io.File;
 
 public class TrackSummary {
     private long id;
@@ -135,6 +139,7 @@ public class TrackSummary {
         Progress = progress;
     }
 
+
     public static TrackSummary getSummary(Track T) {
         PhysicalDataFormatter phdformatter = new PhysicalDataFormatter();
         PhysicalData phdDuration;
@@ -163,7 +168,12 @@ public class TrackSummary {
 
         TS.setProgress(0);
 
-
+        String Filename = GPSApplication.getInstance().getApplicationContext().getFilesDir() + "/Thumbnails/" + T.getId() + ".png";
+        File file = new File(Filename);
+        if (file.exists()) {
+            TS.setThumbnail(BitmapFactory.decodeFile(Filename));
+            Log.w("myApp", "[#] Track.java - Loaded Thumbnail for Track " + T.getId());
+        } else TS.setThumbnail(null);
 
         return TS;
     }
