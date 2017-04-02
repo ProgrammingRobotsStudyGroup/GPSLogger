@@ -695,6 +695,7 @@ public class GPSApplication extends Application implements GpsStatus.Listener, L
     }
 
 
+
 // PREFERENCES LOADER ------------------------------------------------------------------------------
 
     private void LoadPreferences() {

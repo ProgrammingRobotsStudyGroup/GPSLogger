@@ -1,5 +1,5 @@
 /*
- * TrackInfoAdapter - Java Class for Android
+ * TrackAdapter - Java Class for Android
  * Created by G.Capelli (BasicAirData) on 19/6/2016
  *
  * This program is free software: you can redistribute it and/or modify
@@ -29,20 +29,16 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-//import com.squareup.picasso.Picasso;
-
 import org.greenrobot.eventbus.EventBus;
 
-import java.io.File;
 import java.util.ArrayList;
 
 
 class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.TrackHolder> {
 
     private final static int NOT_AVAILABLE = -100000;
-    private final static String FilesDir = GPSApplication.getInstance().getApplicationContext().getFilesDir().toString();
 
-    private ArrayList<Track> dataSet;
+    private ArrayList<TrackSummary> dataSet;
     private int selectedItem = -1;
 
     //private final int[] Icons = {R.mipmap.ic_place_white_24dp, R.mipmap.ic_directions_walk_white_24dp, R.mipmap.ic_terrain_white_24dp,
@@ -77,15 +73,7 @@ class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.TrackHolder> {
         private final ImageView imageViewIcon;
         private final ProgressBar progressBar;
 
-        private PhysicalDataFormatter phdformatter = new PhysicalDataFormatter();
-        private PhysicalData phdDuration;
-        private PhysicalData phdSpeedMax;
-        private PhysicalData phdSpeedAvg;
-        private PhysicalData phdDistance;
-        private PhysicalData phdAltitudeGap;
-
-        private Track track;
-
+        private TrackSummary track;
 
         TrackHolder(View itemView) {
             super(itemView);
@@ -121,22 +109,20 @@ class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.TrackHolder> {
             progressBar.setProgress(newprogress);
         }
 
-        void BindTrack(Track trk) {
+        void BindTrack(TrackSummary trk) {
 
             track = trk;
-            numberOfPoints = track.getNumberOfLocations();
+
+            textViewTrackGeopoints.setText(track.getTrackpoints());
+            textViewTrackPlacemarks.setText(track.getPlacemarks());
             textViewTrackName.setText(track.getName());
-            if (numberOfPoints > 1) {
-                phdDistance = phdformatter.format(track.getEstimatedDistance(),PhysicalDataFormatter.FORMAT_DISTANCE);
-                textViewTrackLength.setText(phdDistance.Value + " " + phdDistance.UM);
-                phdDuration = phdformatter.format(track.getPrefTime(),PhysicalDataFormatter.FORMAT_DURATION);
-                textViewTrackDuration.setText(phdDuration.Value);
-                phdAltitudeGap = phdformatter.format(track.getEstimatedAltitudeGap(GPSApplication.getInstance().getPrefEGM96AltitudeCorrection()),PhysicalDataFormatter.FORMAT_ALTITUDE);
-                textViewTrackAltitudeGap.setText(phdAltitudeGap.Value + " " + phdAltitudeGap.UM);
-                phdSpeedMax = phdformatter.format(track.getSpeedMax(),PhysicalDataFormatter.FORMAT_SPEED);
-                textViewTrackMaxSpeed.setText(phdSpeedMax.Value + " " + phdSpeedMax.UM);
-                phdSpeedAvg = phdformatter.format(track.getPrefSpeedAverage(),PhysicalDataFormatter.FORMAT_SPEED_AVG);
-                textViewTrackAverageSpeed.setText(phdSpeedAvg.Value + " " + phdSpeedAvg.UM);
+
+            if (!track.getTrackpoints().equals("0")) {
+                textViewTrackLength.setText(track.getLength());
+                textViewTrackDuration.setText(track.getDuration());
+                textViewTrackAltitudeGap.setText(track.getAltGap());
+                textViewTrackMaxSpeed.setText(track.getMaxSpd());
+                textViewTrackAverageSpeed.setText(track.getAvgSpd());
             } else {
                 textViewTrackLength.setText("");
                 textViewTrackDuration.setText("");
@@ -144,8 +130,7 @@ class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.TrackHolder> {
                 textViewTrackMaxSpeed.setText("");
                 textViewTrackAverageSpeed.setText("");
             }
-            textViewTrackGeopoints.setText(String.valueOf(numberOfPoints));
-            textViewTrackPlacemarks.setText(String.valueOf(track.getNumberOfPlacemarks()));
+
             progressBar.setProgress(track.getProgress());
             TT = track.getTrackType();
             if (TT != NOT_AVAILABLE) {
@@ -153,18 +138,13 @@ class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.TrackHolder> {
                 imageViewIcon.setImageBitmap(bmpTrackType[TT]);
             }
             else imageViewIcon.setVisibility(View.INVISIBLE);
-            String Filename = FilesDir + "/Thumbnails/" + track.getId() + ".png";
-            File file = new File(Filename);
-            if (file.exists ()) {
-                bmp = BitmapFactory.decodeFile(Filename);
-                imageViewThumbnail.setImageBitmap(bmp);
-            } else imageViewThumbnail.setImageDrawable(null);
-            //Picasso.with(GPSApplication.getInstance().getApplicationContext()).load(file).into(imageViewThumbnail);
+
+            imageViewThumbnail.setImageBitmap(track.getThumbnail());
         }
     }
 
 
-    TrackAdapter(ArrayList<Track> data) {
+    TrackAdapter(ArrayList<TrackSummary> data) {
         this.dataSet = data;
     }
 

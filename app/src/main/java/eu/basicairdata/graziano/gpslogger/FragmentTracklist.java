@@ -53,7 +53,7 @@ public class FragmentTracklist extends Fragment {
     RecyclerView.LayoutManager layoutManager;
 
     private RecyclerView.Adapter adapter;
-    private ArrayList<Track> data;
+    private ArrayList<TrackSummary> data;
 
     private View view;
     private TextView TVTracklistEmpty;
@@ -353,7 +353,7 @@ public class FragmentTracklist extends Fragment {
                     @Override
                     public void run() {
                         int i = 0;
-                        for (Track T : data) {
+                        for (TrackSummary T : data) {
                             if (T.getId() == trackid) {
                                 setProgress(i, T.getProgress());
                                 //adapter.notifyItemChanged(i);
@@ -368,7 +368,7 @@ public class FragmentTracklist extends Fragment {
             final long trackid = Long.valueOf(msg.split(" ")[1]);
             if (trackid > 0) {
                 int i = 0;
-                for (Track track : data) {
+                for (TrackSummary track : data) {
                     if (track.getId() == trackid) {
                         final int ii = i;
                         getActivity().runOnUiThread(new Runnable() {
@@ -382,7 +382,7 @@ public class FragmentTracklist extends Fragment {
                         intent.setAction(Intent.ACTION_SEND_MULTIPLE);
                         //intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         intent.putExtra(Intent.EXTRA_SUBJECT, "GPS Logger - Track " + track.getName());
-
+/* TODO
                         PhysicalDataFormatter phdformatter = new PhysicalDataFormatter();
                         PhysicalData phdDuration;
                         PhysicalData phdSpeedMax;
@@ -407,7 +407,7 @@ public class FragmentTracklist extends Fragment {
                                 + "\n" + getString(R.string.altitude_gap) + " = " + phdAltitudeGap.Value + " " + phdAltitudeGap.UM
                                 + "\n" + getString(R.string.max_speed) + " = " + phdSpeedMax.Value + " " + phdSpeedMax.UM
                                 + "\n" + getString(R.string.average_speed) + " = " + phdSpeedAvg.Value + " " + phdSpeedAvg.UM
-                                + "\n" + getString(R.string.overall_direction) + " = " + phdOverallDirection.Value + " " + phdOverallDirection.UM));
+                                + "\n" + getString(R.string.overall_direction) + " = " + phdOverallDirection.Value + " " + phdOverallDirection.UM));*/
                         intent.setType("text/xml");
 
                         ArrayList<Uri> files = new ArrayList<>();
@@ -454,7 +454,9 @@ public class FragmentTracklist extends Fragment {
             if (data != null) data.clear();
             if (!TI.isEmpty()) {
                 TVTracklistEmpty.setVisibility(View.GONE);
-                data.addAll(TI);
+                for (Track T : TI) {
+                    data.add(TrackSummary.getSummary(T));
+                }
             } else {
                 TVTracklistEmpty.setVisibility(View.VISIBLE);
             }
