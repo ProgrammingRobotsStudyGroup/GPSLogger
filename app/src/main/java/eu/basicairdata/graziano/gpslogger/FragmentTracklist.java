@@ -31,6 +31,7 @@ import android.support.v7.view.ContextThemeWrapper;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -191,6 +192,7 @@ public class FragmentTracklist extends Fragment {
 
                                         EventBus.getDefault().post("DELETE_TRACK " + data.get(ii).getId());
                                         data.remove(ii);
+                                        adapter.notifyItemRemoved(ii);
                                         // Delete exported files
                                         DeleteFile(Environment.getExternalStorageDirectory() + "/GPSLogger/" + name + ".txt");
                                         DeleteFile(Environment.getExternalStorageDirectory() + "/GPSLogger/" + name + ".kml");
@@ -211,6 +213,7 @@ public class FragmentTracklist extends Fragment {
 
                                         EventBus.getDefault().post("DELETE_TRACK " + data.get(ii).getId());
                                         data.remove(ii);
+                                        adapter.notifyItemRemoved(ii);
                                         // Delete track files
                                         DeleteFile(Environment.getExternalStorageDirectory() + "/GPSLogger/AppData/" + name + ".txt");
                                         DeleteFile(Environment.getExternalStorageDirectory() + "/GPSLogger/AppData/" + name + ".kml");
@@ -238,6 +241,7 @@ public class FragmentTracklist extends Fragment {
 
                                         EventBus.getDefault().post("DELETE_TRACK " + data.get(ii).getId());
                                         data.remove(ii);
+                                        adapter.notifyItemRemoved(ii);
                                         // Delete track files
                                         DeleteFile(Environment.getExternalStorageDirectory() + "/GPSLogger/AppData/" + name + ".txt");
                                         DeleteFile(Environment.getExternalStorageDirectory() + "/GPSLogger/AppData/" + name + ".kml");
@@ -349,9 +353,9 @@ public class FragmentTracklist extends Fragment {
             final long trackid = Long.valueOf(msg.split(" ")[1]);
             final int progress = Integer.valueOf(msg.split(" ")[2]);
             if ((trackid > 0) && (progress >= 0)) {
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
+                //getActivity().runOnUiThread(new Runnable() {
+                //    @Override
+                //    public void run() {
                         int i = 0;
                         for (TrackSummary T : data) {
                             if (T.getId() == trackid) {
@@ -360,8 +364,8 @@ public class FragmentTracklist extends Fragment {
                             }
                             i++;
                         }
-                    }
-                });
+                //    }
+                //});
             }
         }
         if (msg.contains("INTENT_SEND")) {
@@ -382,32 +386,17 @@ public class FragmentTracklist extends Fragment {
                         intent.setAction(Intent.ACTION_SEND_MULTIPLE);
                         //intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         intent.putExtra(Intent.EXTRA_SUBJECT, "GPS Logger - Track " + track.getName());
-/* TODO
-                        PhysicalDataFormatter phdformatter = new PhysicalDataFormatter();
-                        PhysicalData phdDuration;
-                        PhysicalData phdSpeedMax;
-                        PhysicalData phdSpeedAvg;
-                        PhysicalData phdDistance;
-                        PhysicalData phdAltitudeGap;
-                        PhysicalData phdOverallDirection;
-                        phdDuration = phdformatter.format(track.getPrefTime(),PhysicalDataFormatter.FORMAT_DURATION);
-                        phdSpeedMax = phdformatter.format(track.getSpeedMax(),PhysicalDataFormatter.FORMAT_SPEED);
-                        phdSpeedAvg = phdformatter.format(track.getPrefSpeedAverage(),PhysicalDataFormatter.FORMAT_SPEED_AVG);
-                        phdDistance = phdformatter.format(track.getEstimatedDistance(),PhysicalDataFormatter.FORMAT_DISTANCE);
-                        phdAltitudeGap = phdformatter.format(track.getEstimatedAltitudeGap(GPSApplication.getInstance().getPrefEGM96AltitudeCorrection()),PhysicalDataFormatter.FORMAT_ALTITUDE);
-                        phdOverallDirection = phdformatter.format(track.getBearing(),PhysicalDataFormatter.FORMAT_BEARING);
 
                         intent.putExtra(Intent.EXTRA_TEXT, (CharSequence) ("GPS Logger - Track " + track.getName()
-                                + "\n" + track.getNumberOfLocations() + " " + getString(R.string.trackpoints)
-                                + "\n" + track.getNumberOfPlacemarks() + " " + getString(R.string.placemarks)
+                                + "\n" + track.getTrackpoints() + " " + getString(R.string.trackpoints)
+                                + "\n" + track.getPlacemarks() + " " + getString(R.string.placemarks)
                                 + "\n"
                                 + "\n" + getString(R.string.pref_track_stats) + " " + (GPSApplication.getInstance().getPrefShowTrackStatsType() == 0 ? getString(R.string.pref_track_stats_totaltime) : getString(R.string.pref_track_stats_movingtime)) + ":"
-                                + "\n" + getString(R.string.distance) + " = " + phdDistance.Value + " " + phdDistance.UM
-                                + "\n" + getString(R.string.duration) + " = " + phdDuration.Value
-                                + "\n" + getString(R.string.altitude_gap) + " = " + phdAltitudeGap.Value + " " + phdAltitudeGap.UM
-                                + "\n" + getString(R.string.max_speed) + " = " + phdSpeedMax.Value + " " + phdSpeedMax.UM
-                                + "\n" + getString(R.string.average_speed) + " = " + phdSpeedAvg.Value + " " + phdSpeedAvg.UM
-                                + "\n" + getString(R.string.overall_direction) + " = " + phdOverallDirection.Value + " " + phdOverallDirection.UM));*/
+                                + "\n" + getString(R.string.distance) + " = " + track.getLength()
+                                + "\n" + getString(R.string.duration) + " = " + track.getDuration()
+                                + "\n" + getString(R.string.altitude_gap) + " = " + track.getAltGap()
+                                + "\n" + getString(R.string.max_speed) + " = " + track.getMaxSpd()
+                                + "\n" + getString(R.string.average_speed) + " = " + track.getAvgSpd()));
                         intent.setType("text/xml");
 
                         ArrayList<Uri> files = new ArrayList<>();
@@ -450,13 +439,12 @@ public class FragmentTracklist extends Fragment {
 
     public void Update() {
         if (isAdded()) {
-            final List<Track> TI = GPSApplication.getInstance().getTrackList();
+            final ArrayList<TrackSummary> TI = GPSApplication.getInstance().getListTrackSummaries();
+            Log.w("myApp", "[#] FragmentTracklist.java - Tracklist size: " + TI.size());
             if (data != null) data.clear();
             if (!TI.isEmpty()) {
-                TVTracklistEmpty.setVisibility(View.GONE);
-                for (Track T : TI) {
-                    data.add(TrackSummary.getSummary(T));
-                }
+                data.addAll(TI);
+                TVTracklistEmpty.setVisibility(View.INVISIBLE);
             } else {
                 TVTracklistEmpty.setVisibility(View.VISIBLE);
             }

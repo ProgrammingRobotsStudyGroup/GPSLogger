@@ -769,7 +769,7 @@ class DatabaseHandler extends SQLiteOpenHelper {
         String selectQuery = "SELECT  * FROM " + TABLE_TRACKS + " WHERE "
                 + KEY_ID + " = " + TrackID;
 
-        //Log.w("myApp", "[#] DatabaseHandler.java - getTrackList(" + startNumber + ", " +endNumber + ") ==> " + selectQuery);
+        //Log.w("myApp", "[#] DatabaseHandler.java - getListTrackSummaries(" + startNumber + ", " +endNumber + ") ==> " + selectQuery);
 
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
@@ -879,7 +879,7 @@ class DatabaseHandler extends SQLiteOpenHelper {
                 + KEY_ID + " BETWEEN " + startNumber + " AND " + endNumber
                 + " ORDER BY " + KEY_ID + " DESC";
 
-        //Log.w("myApp", "[#] DatabaseHandler.java - getTrackList(" + startNumber + ", " +endNumber + ") ==> " + selectQuery);
+        //Log.w("myApp", "[#] DatabaseHandler.java - getListTrackSummaries(" + startNumber + ", " +endNumber + ") ==> " + selectQuery);
 
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
@@ -961,7 +961,7 @@ class DatabaseHandler extends SQLiteOpenHelper {
         String selectQuery = "SELECT  * FROM " + TABLE_TRACKS
                 + " ORDER BY " + KEY_ID + " DESC";
 
-        //Log.w("myApp", "[#] DatabaseHandler.java - getTrackList() ==> " + selectQuery);
+        //Log.w("myApp", "[#] DatabaseHandler.java - getListTrackSummaries() ==> " + selectQuery);
 
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);

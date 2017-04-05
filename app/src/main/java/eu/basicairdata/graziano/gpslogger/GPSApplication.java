@@ -142,6 +142,9 @@ public class GPSApplication extends Application implements GpsStatus.Listener, L
     private Track _currentTrack = null;
     private List<Track> _ArrayListTracks = new ArrayList<>();
 
+    private final Object mLock = new Object();                                  // The lock for _ArrayListTrackSummaries access
+    private List<TrackSummary> _ArrayListTrackSummaries = new ArrayList<>();    // The Track Summary list for Tracklist
+
     Thumbnailer Th;
     Exporter Ex;
     private AsyncUpdateThreadClass asyncUpdateThread = new AsyncUpdateThreadClass();
@@ -350,9 +353,11 @@ public class GPSApplication extends Application implements GpsStatus.Listener, L
 
     public void setPlacemarkRequest(boolean placemarkRequest) { PlacemarkRequest = placemarkRequest; }
 
-    public List<Track> getTrackList() {
-        List<Track> tl = new ArrayList<>();
-        tl.addAll(_ArrayListTracks);
+    public ArrayList<TrackSummary> getListTrackSummaries() {
+        ArrayList<TrackSummary> tl = new ArrayList<>();
+        synchronized (mLock) {
+            tl.addAll(_ArrayListTrackSummaries);
+        }
         return tl;
     }
 
@@ -423,15 +428,17 @@ public class GPSApplication extends Application implements GpsStatus.Listener, L
             long trackid = Long.valueOf(msg.split(" ")[1]);
             int progress = Integer.valueOf(msg.split(" ")[2]);
             if ((trackid > 0) && (progress >= 0)) {
-                for (Track T : _ArrayListTracks) {
-                    if (T.getId() == trackid) T.setProgress(progress);
-                }
+                //synchronized (mLock) {
+                    for (TrackSummary T : _ArrayListTrackSummaries) {
+                        if (T.getId() == trackid) T.setProgress(progress);
+                    }
+                //}
             }
         }
         if (msg.contains("TRACK_EXPORTED")) {
             long trackid = Long.valueOf(msg.split(" ")[1]);
             if (trackid > 0) {
-                for (Track T : _ArrayListTracks) {
+                for (TrackSummary T : _ArrayListTrackSummaries) {
                     if (T.getId() == trackid) {
                         T.setProgress(0);
                         EventBus.getDefault().post("UPDATE_TRACKLIST");
@@ -679,6 +686,18 @@ public class GPSApplication extends Application implements GpsStatus.Listener, L
     }
 
 
+    public void UpdateTrackListSummaries() {
+        synchronized (mLock) {
+            _ArrayListTrackSummaries.clear();
+            if (!_ArrayListTracks.isEmpty()) {
+                for (Track T : _ArrayListTracks) _ArrayListTrackSummaries.add(TrackSummary.getSummary(T));
+            }
+        }
+        EventBus.getDefault().post("UPDATE_TRACKLIST");
+        Log.w("myApp", "[#] GPSApplication.java - Update Tracklist: Added " + _ArrayListTrackSummaries.size() + " tracks");
+    }
+
+
     public void UpdateTrackList() {
         long ID = GPSDataBase.getLastTrackID();
         if (ID > 0) {
@@ -689,8 +708,7 @@ public class GPSApplication extends Application implements GpsStatus.Listener, L
                 File file = new File(getApplicationContext().getFilesDir() + "/Thumbnails/", fname);
                 if (!file.exists ()) Th = new Thumbnailer(ID - 1);
             }
-            EventBus.getDefault().post("UPDATE_TRACKLIST");
-            //Log.w("myApp", "[#] GPSApplication.java - Update Tracklist: Added " + _ArrayListTracks.size() + " tracks");
+            UpdateTrackListSummaries();
         }
     }
 
@@ -744,7 +762,8 @@ public class GPSApplication extends Application implements GpsStatus.Listener, L
         EventBus.getDefault().post("APPLY_SETTINGS");
         EventBus.getDefault().post("UPDATE_FIX");
         EventBus.getDefault().post("UPDATE_TRACK");
-        EventBus.getDefault().post("UPDATE_TRACKLIST");
+        UpdateTrackListSummaries();
+        //EventBus.getDefault().post("UPDATE_TRACKLIST");
     }
 
 
@@ -1000,8 +1019,8 @@ public class GPSApplication extends Application implements GpsStatus.Listener, L
                             e.printStackTrace();
                             //Log.w("myApp", "[#] GPSApplication.java - Unable to save: " + Environment.getExternalStorageDirectory() + "/GPSLogger/AppData/" + fname);
                         }
-
-                        EventBus.getDefault().post("UPDATE_TRACKLIST");
+                        UpdateTrackListSummaries();
+                        //EventBus.getDefault().post("UPDATE_TRACKLIST");
                     }
                 }
             }
